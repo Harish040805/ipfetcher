@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IP Fetcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        input, button {
+            padding: 8px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f4f4f4;
+            border-left: 5px solid #007BFF;
+            white-space: pre-wrap;
+        }
+        .o{
+            margin: 50px;
+            padding: 10px;
+        }
+        .x{
+            margin: 50px;
+            padding: 30px;
+        }
+        .bg-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            font-weight: bold;
+            color: #007BFF;
+            opacity: 0.15; 
+            z-index: 1;
+            white-space: nowrap;
+            user-select: none;
+            pointer-events: none;
+        }
+        .container {
+            position: relative;
+            background-color: rgba(182, 217, 255, 0.5);
+            margin: 10px;
+            z-index: 2;
+            padding: 50px;
+            border-radius: 10px;
+        }
+button {
+    background-color: #aed5ff;
+    border: 4px solid #6794c5;
+    color: #0051a7;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #a6ccf6;
+    color: #0051a7;
+}
+
+    </style>
+</head>
+<body>
+    <p class="bg-text">Harish Creations</p>
+<div class="container">
+    <h1 class="o">IP Fetcher - Get User Info from IP Address</h1>
+    <input 
+    type="text" 
+    id="ipInput" 
+    class="x" 
+    placeholder="_Enter_IPv4_or_IPv6_address_"
+    pattern="^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})$"
+    title="Enter a valid IPv4 (0-255 per octet) or IPv6 address"
+    required
+    style="width:300px;"
+>
+<button onclick="getIPInfo()">Get Info</button>
+    <button onclick="getIPInfo('self')">My IP Info</button>
+<button id="locBtn">Share my location</button>
+<div id="locResult"></div>
+
+<script>
+document.getElementById('locBtn').addEventListener('click', () => {
+  const out = document.getElementById('locResult');
+  if (!navigator.geolocation) {
+    out.textContent = 'Geolocation not supported by this browser.';
+    return;
+  }
+  out.textContent = 'Requesting permission...';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      out.innerHTML = `Lat: ${latitude}<br>Lon: ${longitude}<br>Accuracy (meters): ${accuracy}`;
+      // Send these to your server alongside the user's IP if you need to store them.
+    },
+    (err) => {
+      out.textContent = 'Permission denied or error: ' + err.message;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
+</script>
+
+    <div id="result"></div>
+
+    <script>
+function isValidIP(ip) {
+    // IPv4 validation (0-255 per octet, no leading zeros)
+    const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+    // IPv6 validation (8 groups of 1-4 hex digits)
+    const ipv6Pattern = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+    return ipv4Pattern.test(ip) || ipv6Pattern.test(ip);
+}
+
+function isPrivateIP(ip) {
+    // Only for IPv4, IPv6 private ranges are more complex
+    const parts = ip.split('.').map(Number);
+    if (parts.length !== 4) return false; 
+    if (parts[0] === 10) return true;
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+    if (parts[0] === 192 && parts[1] === 168) return true;
+    if (parts[0] === 127) return true;
+    if (parts[0] === 169 && parts[1] === 254) return true;
+    return false;
+}
+
+function getIPInfo(inputIP = null) {
+    const ipField = document.getElementById("ipInput");
+    const resultDiv = document.getElementById("result");
+
+    const ip = inputIP === 'self' ? '' : ipField.value.trim();
+
+    if (!ip && inputIP !== 'self') {
+        resultDiv.innerHTML = "<strong>Please enter an IP address.</strong>";
+        return;
+    }
+
+    if (ip && !isValidIP(ip)) {
+        resultDiv.innerHTML = "<strong>Please enter a valid IPv4 or IPv6 address.</strong>";
+        return;
+    }
+
+    resultDiv.innerHTML = "Fetching info...";
+
+    const url = inputIP === 'self' ? `https://ipapi.co/json/` : `https://ipapi.co/${ip}/json/`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error("API request failed");
+            return response.json();
+        })
+        .then(data => {
+            let privateNote = "";
+            if (ip && ip.includes('.') && isPrivateIP(ip)) {
+                privateNote = "<p style='color:orange'><strong>Note:</strong> This is a reserved/private IPv4. Info may be limited.</p>";
+            }
+
+            if (data.error) {
+                resultDiv.innerHTML = `<strong>Error:</strong> ${data.reason}${privateNote}`;
+                return;
+            }
+
+            resultDiv.innerHTML = `
+                ${privateNote}
+                <h3>Information for IP: ${data.ip || 'N/A'}</h3>
+                <p><strong>City:</strong> ${data.city || 'N/A'}</p>
+                <p><strong>Region:</strong> ${data.region || 'N/A'}</p>
+                <p><strong>Country:</strong> ${data.country_name || 'N/A'}</p>
+                <p><strong>Postal Code:</strong> ${data.postal || 'N/A'}</p>
+                <p><strong>Latitude:</strong> ${data.latitude || 'N/A'}</p>
+                <p><strong>Longitude:</strong> ${data.longitude || 'N/A'}</p>
+                <p><strong>Organization:</strong> ${data.org || 'N/A'}</p>
+                <p><strong>Timezone:</strong> ${data.timezone || 'N/A'}</p>
+            `;
+        })
+        .catch(error => {
+            resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+        });
+}
+
+// Optional: handle "Share my location" button
+document.getElementById('locBtn').addEventListener('click', () => {
+    const out = document.getElementById('locResult');
+    if (!navigator.geolocation) {
+        out.textContent = 'Geolocation not supported by this browser.';
+        return;
+    }
+    out.textContent = 'Requesting permission...';
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude, accuracy } = pos.coords;
+            out.innerHTML = `Lat: ${latitude}<br>Lon: ${longitude}<br>Accuracy (meters): ${accuracy}`;
+        },
+        (err) => {
+            out.textContent = 'Permission denied or error: ' + err.message;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+});
+
+    </script>
+</div>
+</body>
+</html>

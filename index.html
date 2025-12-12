@@ -6,13 +6,17 @@
     <title>IP Fetcher</title>
 <style>
 body { margin: 0; padding: 0; font-family: "Poppins", sans-serif; background: linear-gradient(135deg, #e8f1ff, #ffffff); color: #0d1b3d; max-width: 99vw; }
-.container { max-width: 800px; margin: 90px auto; background: #ffffff; padding: 35px; border-radius: 20px; box-shadow: 0 12px 35px rgba(0, 64, 150, 0.12); animation: fadeIn 0.5s ease; }
+.container { max-width: 800px; margin: 90px auto; background: #ffffff; padding: 35px; border-radius: 20px; box-shadow: 0 12px 35px rgba(0, 64, 150, 0.12); 
+        animation: fadeIn 0.5s ease; }
 h1 { text-align: center; margin-bottom: 30px; font-size: 26px; color: #005ad6; font-weight: 600; }
-input[type="text"] { width: 28%; padding: 14px 15px; font-size: 15px; border: 2px solid #cfdfff; border-radius: 4px; background: #f8faff; outline: none; transition: 0.3s; }
+input[type="text"] { width: 28%; padding: 14px 15px; font-size: 15px; border: 2px solid #cfdfff; border-radius: 4px; background: #f8faff; outline: none; 
+        transition: 0.3s; }
 input[type="text"]:focus { border-color: #2f7dff; box-shadow: 0 0 7px rgba(0, 115, 255, 0.3); }
-button { margin-top: 15px; margin-left: 8px; padding: 12px 18px; font-size: 15px; border: none; border-radius: 4px; background: #2f7dff; color: white; cursor: pointer; transition: 0.25s ease; }
+button { margin-top: 15px; margin-left: 8px; padding: 12px 18px; font-size: 15px; border: none; border-radius: 4px; background: #2f7dff; color: white; 
+        cursor: pointer; transition: 0.25s ease; }
 button:hover { background: #1459d9; transform: translateY(-2px); }
-#result, #locResult { margin-top: 10px; padding: 18px; background: #f3f7ff; border-left: 4px solid #2f7dff; border-radius: 6px; line-height: 1.6; font-size: 15px; animation: fadeIn 0.4s; }
+#result, #locResult { margin-top: 10px; padding: 18px; background: #f3f7ff; border-left: 4px solid #2f7dff; border-radius: 6px; line-height: 1.6; font-size: 15px; 
+        animation: fadeIn 0.4s; }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -23,7 +27,10 @@ button:hover { background: #1459d9; transform: translateY(-2px); }
 <div class="container">
     <p>Harish Creations</p>
     <h1>IP Fetcher - Get User Info from IP Address</h1>
-    <input type="text" id="ipInput" autocomplete="off" placeholder="_Enter_IPv4_or_IPv6_address_" pattern="^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})$" title="Enter a valid IPv4 (0-255 per octet) or IPv6 address" required>
+    <input type="text" id="ipInput" autocomplete="off" 
+        placeholder="_Enter_IPv4_or_IPv6_address_" 
+        pattern="^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})$" 
+        title="Enter a valid IPv4 (0-255 per octet) or IPv6 address" required>
     <button onclick="getIPInfo()">Get Info</button>
     <button onclick="getIPInfo('self')">My IP Info</button>
     <button id="locBtn">Share My Location</button>
@@ -33,4 +40,3 @@ button:hover { background: #1459d9; transform: translateY(-2px); }
     <script src="ipfetcherjs.js"></script>
 </body>
 </html>
-

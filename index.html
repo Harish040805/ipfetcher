@@ -23,7 +23,7 @@ button:hover { background: #1459d9; transform: translateY(-2px); }
 <div class="container">
     <p>Harish Creations</p>
     <h1>IP Fetcher - Get User Info from IP Address</h1>
-    <input type="text" id="ipInput" placeholder="_Enter_IPv4_or_IPv6_address_"
+    <input type="text" id="ipInput" autocomplete="off" placeholder="_Enter_IPv4_or_IPv6_address_"
         pattern="^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})$"
         title="Enter a valid IPv4 (0-255 per octet) or IPv6 address" required>
     <button onclick="getIPInfo()">Get Info</button>
@@ -125,4 +125,5 @@ button:hover { background: #1459d9; transform: translateY(-2px); }
 </div>
 </body>
 </html>
+
 

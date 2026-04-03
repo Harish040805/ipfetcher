@@ -1,40 +1,67 @@
-    function isValidIP(ip) { const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/; const ipv6Pattern = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/; return ipv4Pattern.test(ip) || ipv6Pattern.test(ip); }
-    function getIPInfo(inputIP = null) {
-        const ipField = document.getElementById("ipInput");
-        const resultDiv = document.getElementById("result");
-        const ip = inputIP === 'self' ? '' : ipField.value.trim();
-        if (!ip && inputIP !== 'self') { resultDiv.innerHTML = "<strong>Please enter an IP address.</strong>"; return; }
-        if (ip && !isValidIP(ip)) { resultDiv.innerHTML = "<strong>Please enter a valid IPv4 or IPv6 address.</strong>"; return; }
-        resultDiv.innerHTML = "Fetching info...";
-        const url = inputIP === 'self' ? `https://ipapi.co/json/` : `https://ipapi.co/${ip}/json/`;
-        fetch(url)
-            .then(response => { if (!response.ok) throw new Error("API request failed"); return response.json(); })
-            .then(data => {
-                let privateNote = "";
-                if (ip && ip.includes('.') && isPrivateIP(ip)) { privateNote = "<p style='color:orange'><strong>Note:</strong> This is a reserved/private IPv4. Info may be limited.</p>"; }
-                if (data.error) { resultDiv.innerHTML = `<strong>Error:</strong> ${data.reason}${privateNote}`; return; }
-                resultDiv.innerHTML = `
-                    ${privateNote}
-                    <h3>Information for IP: ${data.ip || 'N/A'}</h3>
-                    <p><strong>City:</strong> ${data.city || 'N/A'}</p>
-                    <p><strong>Region:</strong> ${data.region || 'N/A'}</p>
-                    <p><strong>Country:</strong> ${data.country_name || 'N/A'}</p>
-                    <p><strong>Postal Code:</strong> ${data.postal || 'N/A'}</p>
-                    <p><strong>Latitude:</strong> ${data.latitude || 'N/A'}</p>
-                    <p><strong>Longitude:</strong> ${data.longitude || 'N/A'}</p>
-                    <p><strong>Organization:</strong> ${data.org || 'N/A'}</p>
-                    <p><strong>Timezone:</strong> ${data.timezone || 'N/A'}</p>
-                `;
-            })
-            .catch(error => { resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`; });
+    var map = L.map('map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    var marker, circle;
+    async function getIPInfo(isSelf = false) {
+        const resDiv = document.getElementById("result");
+        const ip = document.getElementById("ipInput").value.trim();
+        let url = isSelf ? `https://ipapi.co/json/` : `https://ipapi.co/${ip}/json/`;
+        resDiv.innerHTML = "Fetching Data...";
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.error) {
+                throw new Error("Switching to fallback");
+            }
+            renderData(data);
+        } catch (err) {
+            try {
+                let fbUrl = isSelf ? "http://ip-api.com/json/" : `http://ip-api.com/json/${ip}`;
+                const fbRes = await fetch(fbUrl);
+                const fbData = await fbRes.json();
+                renderData({
+                    ip: fbData.query,
+                    city: fbData.city,
+                    region: fbData.regionName,
+                    country_name: fbData.country,
+                    org: fbData.isp,
+                    latitude: fbData.lat,
+                    longitude: fbData.lon
+                });
+            } catch(e) {
+                resDiv.innerHTML = "Error: Could not fetch IP data. Please check your connection.";
+            }
+        }
     }
-    document.getElementById('locBtn').addEventListener('click', () => {
-        const out = document.getElementById('locResult');
-        if (!navigator.geolocation) { out.textContent = 'Geolocation not supported by this browser.'; return; }
-        out.textContent = 'Requesting permission...';
-        navigator.geolocation.getCurrentPosition(
-            (pos) => { const { latitude, longitude, accuracy } = pos.coords; out.innerHTML = `Lat: ${latitude}<br>Lon: ${longitude}<br>Accuracy (meters): ${accuracy}`; },
-            (err) => { out.textContent = 'Permission denied or error: ' + err.message; },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
-    });
+    function renderData(data) {
+        document.getElementById("result").innerHTML = `
+            <strong>IP:</strong> ${data.ip} <br>
+            <strong>Organization:</strong> ${data.org} <br>
+            <strong>Location:</strong> ${data.city}, ${data.region}, ${data.country_name} <br>
+            <strong>Latitude:</strong> ${data.latitude} | <strong>Longitude:</strong> ${data.longitude}
+        `;
+        updateMap(data.latitude, data.longitude, "IP Location", 5000);
+    }
+    function getBrowserLocation() {
+        if (!navigator.geolocation) {
+            alert("Geolocation not supported");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const { latitude, longitude, accuracy } = pos.coords;
+            document.getElementById("result").innerHTML = `
+                <strong>Precise GPS Found!</strong><br>
+                Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}<br>
+                Accuracy: Within ${accuracy.toFixed(0)}m
+            `;
+            updateMap(latitude, longitude, "Precise Device Location", accuracy);
+        });
+    }
+    function updateMap(lat, lon, label, acc) {
+        if (marker) map.removeLayer(marker);
+        if (circle) map.removeLayer(circle);
+        map.setView([lat, lon], 13);
+        marker = L.marker([lat, lon]).addTo(map).bindPopup(label).openPopup();
+        circle = L.circle([lat, lon], { radius: acc, color: '#2f7dff' }).addTo(map);
+    }
